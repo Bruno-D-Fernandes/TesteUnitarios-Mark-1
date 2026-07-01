@@ -15,12 +15,12 @@ public class JwtService {
 
     public final String SECRET = "dasdhjadlsahdadjwdpoi10893702837adasda!_";
 
-    public String generateToken(String username){
+    public String generateToken(String email){
         Algorithm algorithm = Algorithm.HMAC256(SECRET);
 
         return JWT.create()
                 .withIssuer("meu-backEnd")
-                .withSubject(username)
+                .withSubject(email)
                 .withExpiresAt(LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00")))
                 .sign(algorithm);
 

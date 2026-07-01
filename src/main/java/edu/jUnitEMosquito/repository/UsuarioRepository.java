@@ -26,4 +26,10 @@ public class UsuarioRepository {
     }
 
 
+    public Usuario getByEmail(String email) {
+        return repo.stream()
+                .filter(user -> user.getEmail().equals(email))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException());
+    }
 }

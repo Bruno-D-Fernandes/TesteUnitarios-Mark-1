@@ -1,4 +1,5 @@
 package edu.jUnitEMosquito.model;
+import edu.jUnitEMosquito.dto.RegisterRequestDTO;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -35,6 +36,12 @@ public class Usuario implements UserDetails {
         this.nome = nome;
         this.email = email;
         this.password = password;
+    }
+
+    public Usuario(RegisterRequestDTO registerRequestDTO) {
+        this.nome = registerRequestDTO.nome();
+        this.email = registerRequestDTO.email();
+        this.password = registerRequestDTO.password();
     }
 
     public Usuario() {
