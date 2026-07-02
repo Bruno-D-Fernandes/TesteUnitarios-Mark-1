@@ -1,8 +1,8 @@
 package edu.jUnitEMosquito.service;
 
 import edu.jUnitEMosquito.config.security.JwtService;
-import edu.jUnitEMosquito.dto.LoginRequestDTO;
-import edu.jUnitEMosquito.dto.RegisterRequestDTO;
+import edu.jUnitEMosquito.dto.usuario.LoginRequestDTO;
+import edu.jUnitEMosquito.dto.usuario.RegisterRequestDTO;
 import edu.jUnitEMosquito.model.Usuario;
 import edu.jUnitEMosquito.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;

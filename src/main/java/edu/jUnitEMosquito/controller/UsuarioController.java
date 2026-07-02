@@ -1,7 +1,7 @@
 package edu.jUnitEMosquito.controller;
 
-import edu.jUnitEMosquito.dto.LoginRequestDTO;
-import edu.jUnitEMosquito.dto.RegisterRequestDTO;
+import edu.jUnitEMosquito.dto.usuario.LoginRequestDTO;
+import edu.jUnitEMosquito.dto.usuario.RegisterRequestDTO;
 import edu.jUnitEMosquito.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
