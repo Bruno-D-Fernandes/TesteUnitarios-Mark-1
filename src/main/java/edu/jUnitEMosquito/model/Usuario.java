@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "usuario")
@@ -33,14 +34,13 @@ public class Usuario implements UserDetails {
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UsuarioGrupo> usuarioGrupos;
 
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
     @Override
-    public @Nullable String getPassword() {
+    public String getPassword() {
         return password;
     }
 
@@ -49,28 +49,33 @@ public class Usuario implements UserDetails {
         return nome;
     }
 
+    public Usuario() {
+    }
+
     public Usuario(String nome, String email, String password) {
         this.nome = nome;
         this.email = email;
         this.password = password;
     }
 
-    public Usuario(RegisterRequestDTO registerRequestDTO) {
-        this.nome = registerRequestDTO.nome();
-        this.email = registerRequestDTO.email();
-        this.password = registerRequestDTO.password();
-    }
-
-    public Usuario() {
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Usuario usuario = (Usuario) o;
+        return Objects.equals(id, usuario.id) && Objects.equals(nome, usuario.nome) && Objects.equals(email, usuario.email) && Objects.equals(password, usuario.password) && Objects.equals(meusGrupos, usuario.meusGrupos) && Objects.equals(usuarioGrupos, usuario.usuarioGrupos);
     }
 
     @Override
-    public String toString() {
-        return "Usuario{" +
-                "nome='" + nome + '\'' +
-                ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
-                '}';
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getNome() {
@@ -91,5 +96,21 @@ public class Usuario implements UserDetails {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public List<Group> getMeusGrupos() {
+        return meusGrupos;
+    }
+
+    public void setMeusGrupos(List<Group> meusGrupos) {
+        this.meusGrupos = meusGrupos;
+    }
+
+    public List<UsuarioGrupo> getUsuarioGrupos() {
+        return usuarioGrupos;
+    }
+
+    public void setUsuarioGrupos(List<UsuarioGrupo> usuarioGrupos) {
+        this.usuarioGrupos = usuarioGrupos;
     }
 }

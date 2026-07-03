@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "tasks")
@@ -36,4 +37,73 @@ public class Task {
     )
     private List<Tags> tags;
 
+    public Task() {
+    }
+
+    public Task(String title, OffsetDateTime dataLimite, Usuario creator, Group group) {
+        this.title = title;
+        this.dataLimite = dataLimite;
+        this.creator = creator;
+        this.group = group;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Task task = (Task) o;
+        return Objects.equals(id, task.id) && Objects.equals(title, task.title) && Objects.equals(dataLimite, task.dataLimite) && Objects.equals(creator, task.creator) && Objects.equals(group, task.group) && Objects.equals(tags, task.tags);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public OffsetDateTime getDataLimite() {
+        return dataLimite;
+    }
+
+    public void setDataLimite(OffsetDateTime dataLimite) {
+        this.dataLimite = dataLimite;
+    }
+
+    public Usuario getCreator() {
+        return creator;
+    }
+
+    public void setCreator(Usuario creator) {
+        this.creator = creator;
+    }
+
+    public Group getGroup() {
+        return group;
+    }
+
+    public void setGroup(Group group) {
+        this.group = group;
+    }
+
+    public List<Tags> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<Tags> tags) {
+        this.tags = tags;
+    }
 }
