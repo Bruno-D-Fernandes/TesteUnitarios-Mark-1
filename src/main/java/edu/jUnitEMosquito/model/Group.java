@@ -21,7 +21,7 @@ public class Group {
     @JoinColumn(name = "owner_id", nullable = false)
     private Usuario lider;
 
-    @OneToMany(mappedBy = "group")
+    @OneToMany(mappedBy = "group", fetch = FetchType.LAZY)
     private List<Task> tasks;
 
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)

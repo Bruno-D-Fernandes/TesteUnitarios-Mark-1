@@ -2,6 +2,7 @@ package edu.jUnitEMosquito.service;
 
 import edu.jUnitEMosquito.dto.group.CreateGroupDTO;
 import edu.jUnitEMosquito.dto.group.UserGroupsDto;
+import edu.jUnitEMosquito.dto.task.TaskGroupDto;
 import edu.jUnitEMosquito.exception.group.UsuarioJaPossuiGrupoComEsseNomeException;
 import edu.jUnitEMosquito.model.Group;
 import edu.jUnitEMosquito.model.Usuario;
@@ -53,24 +54,32 @@ public class GroupService {
         groupRepository.save(group);
     }
 
-    public List<Group> getAllGroupsByAuthUser(Usuario usuarioAuth) {
+    public List<UserGroupsDto> getAllGroupsByAuthUser(Usuario usuarioAuth) {
 
         // Fazer tratamento de exceção
-        List<UsuarioGrupo> usuarioGrupos = usuarioGrupoRepository.findByUsuarioN(usuarioAuth)
+        List<Group> groupList = groupRepository.findByUsuarioN(usuarioAuth)
                 .orElseThrow(() -> new RuntimeException("Usuário não possui grupos!"));
 
-        // Finalizar aqui
-        List<UserGroupsDto> response = usuarioGrupos.stream().
-                map((userGroup) -> {
-                    UserGroupsDto dto dto =  new UserGroupsDto(
-                            userGroup.getGroup().getId(),
-                            userGroup.getGroup().getNome(),
+        List<UserGroupsDto> response = groupList.stream()
+                .map(userGroup -> {
+                    List<TaskGroupDto> taskGroupDto = userGroup.getTasks().stream()
+                            .map(task -> new TaskGroupDto(
+                                    task.getId(),
+                                    task.getTitle(),
+                                    task.getDataLimite(),
+                                    task.getTaskStatus()
+                            ))
+                            .toList();
 
-                    )
-                }).toList();
+                    return new UserGroupsDto(
+                            userGroup.getId(),
+                            userGroup.getNome(),
+                            taskGroupDto
+                    );
+                })
+                .toList();
 
-        // colocar Dto's
-        return groups;
+        return response;
     }
 
     // Fazer testes unitários
@@ -81,6 +90,7 @@ public class GroupService {
                 // Fazer tratamento de exceção
                         .orElseThrow(() -> new RuntimeException("Usuário não participa de nenhum grupo com esse nome."));
 
+        // Aspecto?
         // Fazer tratamento de exceção
         // Authorization
         if (usuarioGrupos.getRoles() != UsuarioGrupo.Roles.OWNER) throw new RuntimeException("Usuário não tem permissão para essa ação.");

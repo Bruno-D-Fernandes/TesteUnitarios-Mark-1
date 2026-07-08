@@ -1,6 +1,7 @@
 package edu.jUnitEMosquito.controller;
 
 import edu.jUnitEMosquito.dto.group.CreateGroupDTO;
+import edu.jUnitEMosquito.dto.group.UserGroupsDto;
 import edu.jUnitEMosquito.model.Group;
 import edu.jUnitEMosquito.model.Usuario;
 import edu.jUnitEMosquito.repository.UsuarioGrupoRepository;
@@ -39,9 +40,8 @@ public class GroupController {
     public ResponseEntity getAllGroupsByAuthUser(
             @AuthenticationPrincipal Usuario usuarioAuth
     ){
-        List<Group> groupList = groupService.getAllGroupsByAuthUser(usuarioAuth);
-
-        return ResponseEntity.ok().build();
+        List<UserGroupsDto> groupList = groupService.getAllGroupsByAuthUser(usuarioAuth);
+        return ResponseEntity.ok(groupList);
     }
 
     // resolver lógica de négocio na camada de service
