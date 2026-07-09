@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Repository
 public interface UsuarioGrupoRepository extends JpaRepository<UsuarioGrupo, Long> {
-    Optional<UsuarioGrupo> findByUsuarioAndGroup_Id(
+    Optional<UsuarioGrupo> findByUsuarioAndGrupo_Id(
             Usuario usuario,
             Long id
     );

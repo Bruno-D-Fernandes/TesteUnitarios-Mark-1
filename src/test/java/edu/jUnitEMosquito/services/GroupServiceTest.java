@@ -169,4 +169,6 @@ public class GroupServiceTest {
         }
     }
 
+    // Fazer teste de caso para merge, decidir antes se vou quebrar aquele método em dois
+
 }

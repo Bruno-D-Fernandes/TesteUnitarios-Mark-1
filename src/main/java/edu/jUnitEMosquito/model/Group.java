@@ -24,7 +24,7 @@ public class Group {
     @OneToMany(mappedBy = "group", fetch = FetchType.LAZY)
     private List<Task> tasks;
 
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "grupo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UsuarioGrupo> usuarioGrupos;
 
     @OneToMany(mappedBy = "group", cascade = {CascadeType.ALL},orphanRemoval = true)

@@ -157,7 +157,7 @@ public class GroupService {
     @Transactional
     public void deleteGroup(Usuario usuarioAuth, Long groupId){
 
-        UsuarioGrupo usuarioGrupo = usuarioGrupoRepository.findByUsuarioAndGroup_Id(usuarioAuth, groupId)
+        UsuarioGrupo usuarioGrupo = usuarioGrupoRepository.findByUsuarioAndGrupo_Id(usuarioAuth, groupId)
                         .orElseThrow(() -> new GrupoNaoEncontrado());
 
         // Aspect?
