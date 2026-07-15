@@ -2,6 +2,8 @@ package edu.jUnitEMosquito.services;
 
 import edu.jUnitEMosquito.dto.group.CreateGroupDTO;
 import edu.jUnitEMosquito.dto.group.MergeGroupDTO;
+import edu.jUnitEMosquito.dto.group.ChangeGroupOwnerDTO;
+import edu.jUnitEMosquito.dto.group.ChangeGroupNameDTO;
 import edu.jUnitEMosquito.dto.group.UserGroupsDto;
 import edu.jUnitEMosquito.dto.task.TaskGroupDto;
 import edu.jUnitEMosquito.exception.authorization.UsuarioNaoPossuiPermissao;
@@ -174,15 +176,15 @@ public class GroupServiceTest {
     @Nested
     class MergeGroup{
 
-        private MergeGroupDTO mergeGroupDTOCorrect;
-        private MergeGroupDTO mergeGroupDTOException;
+        private ChangeGroupOwnerDTO changeGroupOwnerDTO;
+        private ChangeGroupNameDTO changeGroupNameDTO;
         private Usuario novoOwner;
 
         @BeforeEach
         void setup(){
             novoOwner = new Usuario("Pedro", "pedro@gmail.com", "456");
-            mergeGroupDTOCorrect = new MergeGroupDTO("Novo Grupo", 2L, 1L);
-            mergeGroupDTOException = new MergeGroupDTO("Grupo Inválido", 3L, 1L);
+            changeGroupOwnerDTO = new ChangeGroupOwnerDTO(1L, 2L);
+            changeGroupNameDTO = new ChangeGroupNameDTO(1L, "Novo Grupo");
         }
 
         @Nested
@@ -194,7 +196,7 @@ public class GroupServiceTest {
                 when(usuarioGrupoRepository.findByGroup_IdN(1L)).thenReturn(List.of());
 
                 GrupoNaoEncontrado excecao = Assertions.assertThrows(GrupoNaoEncontrado.class, () -> {
-                    groupService.mergeGroup(usuario, mergeGroupDTOCorrect);
+                    groupService.changeGroupOwner(usuario, changeGroupOwnerDTO);
                 });
 
                 Assertions.assertInstanceOf(GrupoNaoEncontrado.class, excecao);
@@ -209,7 +211,7 @@ public class GroupServiceTest {
                 when(usuarioGrupoRepository.findByGroup_IdN(1L)).thenReturn(List.of(usuarioGrupoNaoAuth));
 
                 UsuarioNaoParticipaDoGrupo excecao = Assertions.assertThrows(UsuarioNaoParticipaDoGrupo.class, () -> {
-                    groupService.mergeGroup(usuarioNaoParticipaDoGrupo, mergeGroupDTOCorrect);
+                    groupService.changeGroupOwner(usuarioNaoParticipaDoGrupo, changeGroupOwnerDTO);
                 });
 
                 Assertions.assertInstanceOf(UsuarioNaoParticipaDoGrupo.class, excecao);
@@ -223,7 +225,7 @@ public class GroupServiceTest {
                 when(usuarioGrupoRepository.findByGroup_IdN(1L)).thenReturn(List.of(usuarioOwner));
 
                 UsuarioNaoParticipaDoGrupo excecao = Assertions.assertThrows(UsuarioNaoParticipaDoGrupo.class, () -> {
-                    groupService.mergeGroup(usuario, mergeGroupDTOCorrect);
+                    groupService.changeGroupOwner(usuario, changeGroupOwnerDTO);
                 });
 
                 Assertions.assertInstanceOf(UsuarioNaoParticipaDoGrupo.class, excecao);
@@ -236,10 +238,10 @@ public class GroupServiceTest {
                 UsuarioGrupo usuarioMember = new UsuarioGrupo(group, usuario, UsuarioGrupo.Roles.MEMBER);
                 UsuarioGrupo usuarioNovoOwner = new UsuarioGrupo(group, novoOwner, UsuarioGrupo.Roles.MEMBER);
 
-                when(usuarioGrupoRepository.findByGroup_IdN(any())).thenReturn(List.of(usuarioMember, usuarioNovoOwner));
+                when(usuarioGrupoRepository.findByGroup_IdN(1L)).thenReturn(List.of(usuarioMember, usuarioNovoOwner));
 
                 UsuarioNaoPossuiPermissao excecao = Assertions.assertThrows(UsuarioNaoPossuiPermissao.class, () -> {
-                    groupService.mergeGroup(usuario, mergeGroupDTOCorrect);
+                    groupService.changeGroupOwner(usuario, changeGroupOwnerDTO);
                 });
 
                 Assertions.assertInstanceOf(UsuarioNaoPossuiPermissao.class, excecao);
@@ -256,7 +258,7 @@ public class GroupServiceTest {
                 when(groupRepository.findGroupByNomeAndLider(group.getNome(), novoOwner)).thenReturn(List.of(group));
 
                 UsuarioJaPossuiGrupoComEsseNomeException excecao = Assertions.assertThrows(UsuarioJaPossuiGrupoComEsseNomeException.class, () -> {
-                    groupService.mergeGroup(usuario, mergeGroupDTOCorrect);
+                    groupService.changeGroupOwner(usuario, changeGroupOwnerDTO);
                 });
 
                 Assertions.assertInstanceOf(UsuarioJaPossuiGrupoComEsseNomeException.class, excecao);
@@ -272,8 +274,7 @@ public class GroupServiceTest {
                 when(usuarioGrupoRepository.findByGroup_IdN(1L)).thenReturn(List.of(usuarioOwner, usuarioNovoOwner));
                 when(groupRepository.findGroupByNomeAndLider(group.getNome(), novoOwner)).thenReturn(List.of());
 
-                MergeGroupDTO grupo1 = new MergeGroupDTO("Grupo1", 2L, 1L);
-                groupService.mergeGroup(usuario, grupo1);
+                groupService.changeGroupOwner(usuario, changeGroupOwnerDTO);
 
                 Assertions.assertAll(
                         () -> Assertions.assertEquals(UsuarioGrupo.Roles.MEMBER, usuarioOwner.getRoles(), "Dono anterior deve ser degradado para MEMBER"),
@@ -289,7 +290,7 @@ public class GroupServiceTest {
 
                 when(usuarioGrupoRepository.findByGroup_IdN(1L)).thenReturn(List.of(usuarioOwner));
 
-                groupService.mergeGroup(usuario, new MergeGroupDTO("Novo Grupo", usuario.getId(), 1L));
+                groupService.changeGroupOwner(usuario, new ChangeGroupOwnerDTO(1L, usuario.getId()));
 
                 verify(usuarioGrupoRepository, never()).save(any(UsuarioGrupo.class));
             }
@@ -299,15 +300,26 @@ public class GroupServiceTest {
         class ChangeGroupName{
 
             @Test
-            @DisplayName("Deve lançar UsuarioNaoPossuiPermissao quando membro tenta alterar nome do grupo")
+            @DisplayName("Deve lançar GrupoNaoEncontrado quando grupo não existe")
+            void exceptionThrowCase0(){
+                when(usuarioGrupoRepository.findByGroup_IdN(1L)).thenReturn(List.of());
+
+                GrupoNaoEncontrado excecao = Assertions.assertThrows(GrupoNaoEncontrado.class, () -> {
+                    groupService.changeGroupName(usuario, changeGroupNameDTO);
+                });
+
+                Assertions.assertInstanceOf(GrupoNaoEncontrado.class, excecao);
+            }
+
+            @Test
+            @DisplayName("Deve lançar UsuarioNaoParticipaDoGrupo quando membro tenta alterar nome do grupo")
             void exceptionThrowCase1(){
                 UsuarioGrupo usuarioMember = new UsuarioGrupo(group, usuario, UsuarioGrupo.Roles.MEMBER);
 
-                when(usuarioGrupoRepository.findByGroup_IdN(any())).thenReturn(List.of(usuarioMember));
+                when(usuarioGrupoRepository.findByGroup_IdN(1L)).thenReturn(List.of(usuarioMember));
 
-                MergeGroupDTO mergeOnlyName = new MergeGroupDTO("Novo Grupo", usuario.getId(), 1L);
                 UsuarioNaoPossuiPermissao excecao = Assertions.assertThrows(UsuarioNaoPossuiPermissao.class, () -> {
-                    groupService.mergeGroup(usuario, mergeOnlyName);
+                    groupService.changeGroupName(usuario, changeGroupNameDTO);
                 });
 
                 Assertions.assertInstanceOf(UsuarioNaoPossuiPermissao.class, excecao);
@@ -318,12 +330,12 @@ public class GroupServiceTest {
             @DisplayName("Deve lançar NomeDoGrupoInvalido quando nome não segue o padrão")
             void exceptionThrowCase2(){
                 UsuarioGrupo usuarioOwner = new UsuarioGrupo(group, usuario, UsuarioGrupo.Roles.OWNER);
-                MergeGroupDTO mergeInvalidName = new MergeGroupDTO("!@#$%", usuario.getId(), 1L);
+                ChangeGroupNameDTO changeInvalidName = new ChangeGroupNameDTO(1L, "!@#$%");
 
                 when(usuarioGrupoRepository.findByGroup_IdN(1L)).thenReturn(List.of(usuarioOwner));
 
                 NomeDoGrupoInvalido excecao = Assertions.assertThrows(NomeDoGrupoInvalido.class, () -> {
-                    groupService.mergeGroup(usuario, mergeInvalidName);
+                    groupService.changeGroupName(usuario, changeInvalidName);
                 });
 
                 Assertions.assertInstanceOf(NomeDoGrupoInvalido.class, excecao);
@@ -333,13 +345,12 @@ public class GroupServiceTest {
             @DisplayName("Deve lançar UsuarioJaPossuiGrupoComEsseNomeException quando dono já possui grupo com novo nome")
             void exceptionThrowCase3(){
                 UsuarioGrupo usuarioOwner = new UsuarioGrupo(group, usuario, UsuarioGrupo.Roles.OWNER);
-                MergeGroupDTO mergeNewName = new MergeGroupDTO("Novo Grupo", usuario.getId(), 1L);
 
                 when(usuarioGrupoRepository.findByGroup_IdN(1L)).thenReturn(List.of(usuarioOwner));
                 when(groupRepository.findGroupByNomeAndLider("Novo Grupo", usuario)).thenReturn(List.of(new Group("Novo Grupo", usuario)));
 
                 UsuarioJaPossuiGrupoComEsseNomeException excecao = Assertions.assertThrows(UsuarioJaPossuiGrupoComEsseNomeException.class, () -> {
-                    groupService.mergeGroup(usuario, mergeNewName);
+                    groupService.changeGroupName(usuario, changeGroupNameDTO);
                 });
 
                 Assertions.assertInstanceOf(UsuarioJaPossuiGrupoComEsseNomeException.class, excecao);
@@ -350,14 +361,13 @@ public class GroupServiceTest {
             @DisplayName("Deve alterar o nome do grupo com sucesso")
             void successCase1(){
                 UsuarioGrupo usuarioOwner = new UsuarioGrupo(group, usuario, UsuarioGrupo.Roles.OWNER);
-                MergeGroupDTO mergeNewName = new MergeGroupDTO("Novo Nome", usuario.getId(), 1L);
 
                 when(usuarioGrupoRepository.findByGroup_IdN(1L)).thenReturn(List.of(usuarioOwner));
-                when(groupRepository.findGroupByNomeAndLider("Novo Nome", usuario)).thenReturn(List.of());
+                when(groupRepository.findGroupByNomeAndLider("Novo Grupo", usuario)).thenReturn(List.of());
 
-                groupService.mergeGroup(usuario, mergeNewName);
+                groupService.changeGroupName(usuario, changeGroupNameDTO);
 
-                Assertions.assertEquals("Novo Nome", group.getNome(), "Nome do grupo deve ser atualizado");
+                Assertions.assertEquals("Novo Grupo", group.getNome(), "Nome do grupo deve ser atualizado");
                 verify(groupRepository, times(1)).save(any(Group.class));
             }
 
@@ -365,11 +375,11 @@ public class GroupServiceTest {
             @DisplayName("Não deve fazer nada quando novo nome é igual ao atual")
             void successCase2(){
                 UsuarioGrupo usuarioOwner = new UsuarioGrupo(group, usuario, UsuarioGrupo.Roles.OWNER);
-                MergeGroupDTO mergeSameName = new MergeGroupDTO("Grupo1", usuario.getId(), 1L);
+                ChangeGroupNameDTO changeSameName = new ChangeGroupNameDTO(1L, "Grupo1");
 
                 when(usuarioGrupoRepository.findByGroup_IdN(1L)).thenReturn(List.of(usuarioOwner));
 
-                groupService.mergeGroup(usuario, mergeSameName);
+                groupService.changeGroupName(usuario, changeSameName);
 
                 verify(groupRepository, never()).save(any(Group.class));
             }

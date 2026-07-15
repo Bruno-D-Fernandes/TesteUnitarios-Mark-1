@@ -2,6 +2,8 @@ package edu.jUnitEMosquito.service;
 
 import edu.jUnitEMosquito.dto.group.CreateGroupDTO;
 import edu.jUnitEMosquito.dto.group.MergeGroupDTO;
+import edu.jUnitEMosquito.dto.group.ChangeGroupOwnerDTO;
+import edu.jUnitEMosquito.dto.group.ChangeGroupNameDTO;
 import edu.jUnitEMosquito.dto.group.UserGroupsDto;
 import edu.jUnitEMosquito.dto.task.TaskGroupDto;
 import edu.jUnitEMosquito.exception.group.GrupoNaoEncontrado;
@@ -91,25 +93,12 @@ public class GroupService {
 
 
     @Transactional
-    public void mergeGroup(Usuario usuarioAuth, MergeGroupDTO mergeGroupDTO) {
-        List<UsuarioGrupo> newUsuarioGroup = usuarioGrupoRepository.findByGroup_IdN(mergeGroupDTO.groupId());
-        if (newUsuarioGroup.size() < 1) throw new GrupoNaoEncontrado();
+    public void changeGroupOwner(Usuario usuarioAuth, ChangeGroupOwnerDTO dto) {
+        UsuarioGrupo currentOwner = getUsuarioGrupoAutenticado(usuarioAuth, dto.groupId());
+        List<UsuarioGrupo> usuarioGrupoList = getUsuarioGrupoByGroupId(dto.groupId());
 
-        UsuarioGrupo owner = newUsuarioGroup.stream()
-                .filter((usuarioGrupo) -> usuarioGrupo.getUsuario() == usuarioAuth)
-                .findFirst()
-                .orElseThrow(() -> new UsuarioNaoParticipaDoGrupo());
-
-        if (mergeGroupDTO.newIdOwner() != usuarioAuth.getId())
-            changeGroupOwner(newUsuarioGroup, owner, mergeGroupDTO.newIdOwner());
-
-        if (mergeGroupDTO.newName() != owner.getGrupo().getNome())
-            changeGroupName(owner, mergeGroupDTO.newName());
-    }
-
-    private void changeGroupOwner(List<UsuarioGrupo> usuarioGrupoList, UsuarioGrupo currentOwner, Long newOwnerId) {
         List<UsuarioGrupo> newOwnerList = usuarioGrupoList.stream()
-                .filter((usuarioGrupo) -> usuarioGrupo.getUsuario().getId() == newOwnerId)
+                .filter((usuarioGrupo) -> usuarioGrupo.getUsuario().getId() == dto.newOwnerId())
                 .toList();
 
         if (newOwnerList.size() != 1) throw new UsuarioNaoParticipaDoGrupo();
@@ -133,22 +122,41 @@ public class GroupService {
         }
     }
 
-    private void changeGroupName(UsuarioGrupo owner, String newName) {
-        if (!owner.getGrupo().getNome().equals(newName)) {
+    @Transactional
+    public void changeGroupName(Usuario usuarioAuth, ChangeGroupNameDTO dto) {
+        UsuarioGrupo owner = getUsuarioGrupoAutenticado(usuarioAuth, dto.groupId());
+
+        if (!owner.getGrupo().getNome().equals(dto.newName())) {
             if (owner.getRoles() == UsuarioGrupo.Roles.MEMBER) 
                 throw new UsuarioNaoPossuiPermissao("Membros não podem trocar nome do grupo.");
 
-            List<Group> groupByNomeAndLider = groupRepository.findGroupByNomeAndLider(newName, owner.getUsuario());
+            List<Group> groupByNomeAndLider = groupRepository.findGroupByNomeAndLider(dto.newName(), owner.getUsuario());
             if (groupByNomeAndLider.size() != 0) 
                 throw new UsuarioJaPossuiGrupoComEsseNomeException("Dono do grupo já possui grupo com esse nome.");
 
-            boolean matches = Pattern.matches("^(?=(?:[^ ]* ){0,3}[^ ]*$)[A-Za-z0-9 ]{5,15}$", newName);
+            boolean matches = Pattern.matches("^(?=(?:[^ ]* ){0,3}[^ ]*$)[A-Za-z0-9 ]{5,15}$", dto.newName());
             if (!matches) throw new NomeDoGrupoInvalido();
 
             Group group = owner.getGrupo();
-            group.setNome(newName);
+            group.setNome(dto.newName());
             groupRepository.save(group);
         }
+    }
+
+    // Pega o UsuarioGrupo do usuário autenticado, se ele não for dono do grupo, lança uma exception
+    private UsuarioGrupo getUsuarioGrupoAutenticado(Usuario usuarioAuth, Long groupId) {
+        List<UsuarioGrupo> usuarioGrupoList = getUsuarioGrupoByGroupId(groupId);
+        return usuarioGrupoList.stream()
+                .filter((usuarioGrupo) -> usuarioGrupo.getUsuario() == usuarioAuth)
+                .findFirst()
+                .orElseThrow(() -> new UsuarioNaoParticipaDoGrupo());
+    }
+
+    // Pega todos os UsuarioGrupo de um grupo, se não houver nenhum, lança uma exception
+    private List<UsuarioGrupo> getUsuarioGrupoByGroupId(Long groupId) {
+        List<UsuarioGrupo> usuarioGrupoList = usuarioGrupoRepository.findByGroup_IdN(groupId);
+        if (usuarioGrupoList.size() < 1) throw new GrupoNaoEncontrado();
+        return usuarioGrupoList;
     }
 
     // Fazer testes unitários

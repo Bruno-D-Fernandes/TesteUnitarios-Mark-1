@@ -1,10 +1,10 @@
 package edu.jUnitEMosquito.controller;
 
 import edu.jUnitEMosquito.dto.group.CreateGroupDTO;
+import edu.jUnitEMosquito.dto.group.ChangeGroupOwnerDTO;
+import edu.jUnitEMosquito.dto.group.ChangeGroupNameDTO;
 import edu.jUnitEMosquito.dto.group.UserGroupsDto;
-import edu.jUnitEMosquito.model.Group;
 import edu.jUnitEMosquito.model.Usuario;
-import edu.jUnitEMosquito.repository.UsuarioGrupoRepository;
 import edu.jUnitEMosquito.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -44,7 +44,6 @@ public class GroupController {
         return ResponseEntity.ok(groupList);
     }
 
-    // resolver lógica de négocio na camada de service
     @DeleteMapping("/DeleteGroup/{groupId}")
     public ResponseEntity deleteGroup(
             @AuthenticationPrincipal Usuario usuarioAuth,
@@ -55,6 +54,23 @@ public class GroupController {
         return ResponseEntity.ok("Grupo deletado com sucesso!");
     }
 
+    @PutMapping("/change-owner")
+    public ResponseEntity changeGroupOwner(
+            @AuthenticationPrincipal Usuario usuarioAuth,
+            @RequestBody ChangeGroupOwnerDTO dto
+    ){
+        groupService.changeGroupOwner(usuarioAuth, dto);
+        return ResponseEntity.ok("Proprietário do grupo alterado com sucesso!");
+    }
 
+    @PutMapping("/change-name")
+    public ResponseEntity changeGroupName(
+            @AuthenticationPrincipal Usuario usuarioAuth,
+            @RequestBody ChangeGroupNameDTO dto
+    ){
+        groupService.changeGroupName(usuarioAuth, dto);
+        return ResponseEntity.ok("Nome do grupo alterado com sucesso!");
+    }
 
 }
+
