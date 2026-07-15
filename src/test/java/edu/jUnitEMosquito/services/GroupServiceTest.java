@@ -8,6 +8,7 @@ import edu.jUnitEMosquito.exception.authorization.UsuarioNaoPossuiPermissao;
 import edu.jUnitEMosquito.exception.group.GrupoNaoEncontrado;
 import edu.jUnitEMosquito.exception.group.NomeDoGrupoInvalido;
 import edu.jUnitEMosquito.exception.group.UsuarioJaPossuiGrupoComEsseNomeException;
+import edu.jUnitEMosquito.exception.group.UsuarioNaoParticipaDoGrupo;
 import edu.jUnitEMosquito.model.Group;
 import edu.jUnitEMosquito.model.Task;
 import edu.jUnitEMosquito.model.Usuario;
@@ -231,10 +232,11 @@ public class GroupServiceTest {
             @Test
             @DisplayName("Deve lançar UsuarioNaoPossuiPermissao quando dono atual não possui role OWNER")
             void exceptionThrowCase4(){
+                novoOwner.setId(2L);
                 UsuarioGrupo usuarioMember = new UsuarioGrupo(group, usuario, UsuarioGrupo.Roles.MEMBER);
                 UsuarioGrupo usuarioNovoOwner = new UsuarioGrupo(group, novoOwner, UsuarioGrupo.Roles.MEMBER);
 
-                when(usuarioGrupoRepository.findByGroup_IdN(1L)).thenReturn(List.of(usuarioMember, usuarioNovoOwner));
+                when(usuarioGrupoRepository.findByGroup_IdN(any())).thenReturn(List.of(usuarioMember, usuarioNovoOwner));
 
                 UsuarioNaoPossuiPermissao excecao = Assertions.assertThrows(UsuarioNaoPossuiPermissao.class, () -> {
                     groupService.mergeGroup(usuario, mergeGroupDTOCorrect);
@@ -246,6 +248,7 @@ public class GroupServiceTest {
             @Test
             @DisplayName("Deve lançar UsuarioJaPossuiGrupoComEsseNomeException quando novo owner já possui grupo com mesmo nome")
             void exceptionThrowCase5(){
+                novoOwner.setId(2L);
                 UsuarioGrupo usuarioOwner = new UsuarioGrupo(group, usuario, UsuarioGrupo.Roles.OWNER);
                 UsuarioGrupo usuarioNovoOwner = new UsuarioGrupo(group, novoOwner, UsuarioGrupo.Roles.MEMBER);
 
@@ -262,13 +265,15 @@ public class GroupServiceTest {
             @Test
             @DisplayName("Deve transferir a posse do grupo com sucesso")
             void successCase1(){
+                novoOwner.setId(2L);
                 UsuarioGrupo usuarioOwner = new UsuarioGrupo(group, usuario, UsuarioGrupo.Roles.OWNER);
                 UsuarioGrupo usuarioNovoOwner = new UsuarioGrupo(group, novoOwner, UsuarioGrupo.Roles.MEMBER);
 
                 when(usuarioGrupoRepository.findByGroup_IdN(1L)).thenReturn(List.of(usuarioOwner, usuarioNovoOwner));
                 when(groupRepository.findGroupByNomeAndLider(group.getNome(), novoOwner)).thenReturn(List.of());
 
-                groupService.mergeGroup(usuario, mergeGroupDTOCorrect);
+                MergeGroupDTO grupo1 = new MergeGroupDTO("Grupo1", 2L, 1L);
+                groupService.mergeGroup(usuario, grupo1);
 
                 Assertions.assertAll(
                         () -> Assertions.assertEquals(UsuarioGrupo.Roles.MEMBER, usuarioOwner.getRoles(), "Dono anterior deve ser degradado para MEMBER"),
@@ -298,10 +303,11 @@ public class GroupServiceTest {
             void exceptionThrowCase1(){
                 UsuarioGrupo usuarioMember = new UsuarioGrupo(group, usuario, UsuarioGrupo.Roles.MEMBER);
 
-                when(usuarioGrupoRepository.findByGroup_IdN(1L)).thenReturn(List.of(usuarioMember));
+                when(usuarioGrupoRepository.findByGroup_IdN(any())).thenReturn(List.of(usuarioMember));
 
+                MergeGroupDTO mergeOnlyName = new MergeGroupDTO("Novo Grupo", usuario.getId(), 1L);
                 UsuarioNaoPossuiPermissao excecao = Assertions.assertThrows(UsuarioNaoPossuiPermissao.class, () -> {
-                    groupService.mergeGroup(usuario, mergeGroupDTOCorrect);
+                    groupService.mergeGroup(usuario, mergeOnlyName);
                 });
 
                 Assertions.assertInstanceOf(UsuarioNaoPossuiPermissao.class, excecao);
